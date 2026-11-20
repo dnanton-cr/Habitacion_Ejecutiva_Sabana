@@ -1,0 +1,109 @@
+rules_version = '2';
+
+// Reglas de Firestore para Habitación Ejecutiva Sabana Norte
+// ---------------------------------------------------------
+// FASE 1 (actual): sin autenticación. La galería es de lectura pública y la
+// escritura se valida por forma y tamaño. El PIN del panel es solo una barrera
+// de interfaz: cualquiera con la URL del sitio podría escribir directamente.
+// La FASE 2 (bloque comentado al final) exige usuarios autenticados con rol.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function fotoValida() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['thumb', 'caption', 'order', 'vis', 'w', 'h', 'bytes', 'createdAt'])
+        && d.thumb is string
+        && d.thumb.size() > 100
+        && d.thumb.size() <= 400000
+        && d.order is number
+        && d.order >= 0
+        && d.order <= 100000
+        && (!('caption' in d.keys()) || (d.caption is string && d.caption.size() <= 120));
+    }
+
+    function imagenValida() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['full', 'w', 'h', 'bytes'])
+        && d.full is string
+        && d.full.size() > 1000
+        && d.full.size() <= 900000;
+    }
+
+    // ---------- Solicitudes de reserva (solo escritura pública, sin lectura) ----------
+    match /inquiries/{docId} {
+      allow create: if request.resource.data.keys().hasOnly(
+                        ['name', 'phone', 'email', 'arrival', 'nights', 'language', 'message', 'source', 'createdAt'])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() <= 120
+                    && request.resource.data.phone is string
+                    && request.resource.data.phone.size() > 0
+                    && request.resource.data.phone.size() <= 40
+                    && request.resource.data.nights is number
+                    && request.resource.data.nights >= 2
+                    && request.resource.data.nights <= 365
+                    && request.resource.data.source == 'web';
+      allow read, update, delete: if false;   // se consultan desde la consola de Firebase
+    }
+
+    // ---------- Galería: metadatos + miniatura (documentos livianos) ----------
+    match /galeria/{fotoId} {
+      allow read: if true;
+      allow create: if fotoValida();
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['caption', 'order', 'vis']);
+      allow delete: if true;
+    }
+
+    // ---------- Galería: imagen completa (se lee al ampliar) ----------
+    match /galeria_full/{fotoId} {
+      allow read: if true;
+      allow create: if imagenValida();
+      allow update: if false;
+      allow delete: if true;
+    }
+
+    // ---------- Configuración del panel (solo el hash del PIN) ----------
+    match /config/{docId} {
+      allow read: if true;
+      allow create: if docId == 'panel'
+                    && request.resource.data.keys().hasOnly(['pinHash', 'creado'])
+                    && request.resource.data.pinHash is string
+                    && request.resource.data.pinHash.size() == 64;
+      allow update, delete: if false;
+    }
+
+    // =====================================================================
+    // FASE 2 · Módulo de seguridad (descomentar cuando se agregue Firebase Auth)
+    // =====================================================================
+    //
+    // function esAdmin() {
+    //   return request.auth != null
+    //     && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+    //     && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    // }
+    // function puedeEditar() {
+    //   return request.auth != null
+    //     && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in ['admin', 'mantenimiento'];
+    // }
+    //
+    // match /usuarios/{uid} {
+    //   allow read: if request.auth != null && request.auth.uid == uid;
+    //   allow write: if false;              // los roles se asignan desde la consola
+    // }
+    //
+    // match /galeria/{fotoId} {
+    //   allow read: if true;
+    //   allow create, update, delete: if puedeEditar();
+    // }
+    // match /galeria_full/{fotoId} {
+    //   allow read: if true;
+    //   allow create, delete: if puedeEditar();
+    // }
+    // match /config/{docId} {
+    //   allow read: if true;
+    //   allow create, update, delete: if esAdmin();
+    // }
+  }
+}
