@@ -1,109 +1,81 @@
 rules_version = '2';
 
-// Reglas de Firestore para Habitación Ejecutiva Sabana Norte
-// ---------------------------------------------------------
-// FASE 1 (actual): sin autenticación. La galería es de lectura pública y la
-// escritura se valida por forma y tamaño. El PIN del panel es solo una barrera
-// de interfaz: cualquiera con la URL del sitio podría escribir directamente.
-// La FASE 2 (bloque comentado al final) exige usuarios autenticados con rol.
-
+// Proyecto: habitacionejecutivasabana
+//
+// NOVEDAD para videos: bloque "galeria_video" (trozos binarios de cada video) y los campos
+// nuevos permitidos en "galeria" (type, ytid, dur, chunks, mime).
+// Si tus reglas actuales para "galeria" son abiertas (allow read, write: if true), basta con
+// agregar el bloque "galeria_video". Si limitan los campos, agrega los nuevos.
+//
+// ADVERTENCIA: el PIN del panel se verifica en el navegador, así que las reglas no pueden
+// distinguir al administrador de un visitante: la escritura en la galería tiene que quedar abierta.
+// Los límites de abajo solo impiden datos malformados o gigantes. Para que SOLO las administradoras
+// puedan subir o borrar, hay que pasar el panel a inicio de sesión con Google (Firebase Authentication).
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function fotoValida() {
-      let d = request.resource.data;
-      return d.keys().hasOnly(['thumb', 'caption', 'order', 'vis', 'w', 'h', 'bytes', 'createdAt'])
-        && d.thumb is string
-        && d.thumb.size() > 100
-        && d.thumb.size() <= 400000
-        && d.order is number
-        && d.order >= 0
-        && d.order <= 100000
-        && (!('caption' in d.keys()) || (d.caption is string && d.caption.size() <= 120));
+    // Solicitudes de reserva: el público solo puede crearlas (se leen en la consola de Firebase).
+    match /inquiries/{id} {
+      allow create: if
+        request.resource.data.keys().hasOnly(['name', 'phone', 'email', 'arrival', 'nights', 'language', 'message', 'source', 'createdAt'])
+        && request.resource.data.keys().hasAll(['name', 'phone', 'email', 'arrival', 'nights', 'language', 'message', 'source', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() > 0 && request.resource.data.phone.size() <= 30
+        && request.resource.data.email is string && request.resource.data.email.size() <= 120
+        && request.resource.data.arrival is string && request.resource.data.arrival.size() == 10
+        && request.resource.data.nights is int
+        && request.resource.data.nights >= 2 && request.resource.data.nights <= 365
+        && request.resource.data.language in ['es', 'en', 'de', 'pt']
+        && request.resource.data.message is string && request.resource.data.message.size() <= 600
+        && request.resource.data.source == 'web'
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
     }
 
-    function imagenValida() {
-      let d = request.resource.data;
-      return d.keys().hasOnly(['full', 'w', 'h', 'bytes'])
-        && d.full is string
-        && d.full.size() > 1000
-        && d.full.size() <= 900000;
-    }
-
-    // ---------- Solicitudes de reserva (solo escritura pública, sin lectura) ----------
-    match /inquiries/{docId} {
-      allow create: if request.resource.data.keys().hasOnly(
-                        ['name', 'phone', 'email', 'arrival', 'nights', 'language', 'message', 'source', 'createdAt'])
-                    && request.resource.data.name is string
-                    && request.resource.data.name.size() > 0
-                    && request.resource.data.name.size() <= 120
-                    && request.resource.data.phone is string
-                    && request.resource.data.phone.size() > 0
-                    && request.resource.data.phone.size() <= 40
-                    && request.resource.data.nights is number
-                    && request.resource.data.nights >= 2
-                    && request.resource.data.nights <= 365
-                    && request.resource.data.source == 'web';
-      allow read, update, delete: if false;   // se consultan desde la consola de Firebase
-    }
-
-    // ---------- Galería: metadatos + miniatura (documentos livianos) ----------
-    match /galeria/{fotoId} {
+    // Galería (fotos, videos y enlaces de YouTube): metadatos y miniatura.
+    match /galeria/{id} {
       allow read: if true;
-      allow create: if fotoValida();
-      allow update: if request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['caption', 'order', 'vis']);
+      allow create, update: if
+        request.resource.data.keys().hasOnly(['thumb', 'caption', 'order', 'vis', 'w', 'h', 'bytes', 'createdAt', 'type', 'ytid', 'dur', 'chunks', 'mime'])
+        && request.resource.data.thumb is string && request.resource.data.thumb.size() < 300000
+        && (!('caption' in request.resource.data) || (request.resource.data.caption is string && request.resource.data.caption.size() <= 80))
+        && (!('type' in request.resource.data) || request.resource.data.type in ['video', 'youtube'])
+        && (!('chunks' in request.resource.data) || (request.resource.data.chunks is int && request.resource.data.chunks >= 1 && request.resource.data.chunks <= 14));
       allow delete: if true;
     }
 
-    // ---------- Galería: imagen completa (se lee al ampliar) ----------
-    match /galeria_full/{fotoId} {
+    // Foto optimizada completa (se descarga al ampliar).
+    match /galeria_full/{id} {
       allow read: if true;
-      allow create: if imagenValida();
+      allow create, update: if
+        request.resource.data.keys().hasOnly(['full', 'w', 'h', 'bytes'])
+        && request.resource.data.full is string && request.resource.data.full.size() < 1000000;
+      allow delete: if true;
+    }
+
+    // NUEVO: trozos de video (id_000, id_001, …). Cada uno cabe en un documento (< 1 MiB).
+    match /galeria_video/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasOnly(['v', 'i', 'b'])
+        && request.resource.data.v is string
+        && request.resource.data.i is int && request.resource.data.i >= 0 && request.resource.data.i < 14
+        && request.resource.data.b is bytes && request.resource.data.b.size() <= 900000;
       allow update: if false;
       allow delete: if true;
     }
 
-    // ---------- Configuración del panel (solo el hash del PIN) ----------
+    // PIN del panel (hash). Se crea una sola vez; no se puede cambiar ni borrar desde la web.
     match /config/{docId} {
       allow read: if true;
-      allow create: if docId == 'panel'
-                    && request.resource.data.keys().hasOnly(['pinHash', 'creado'])
-                    && request.resource.data.pinHash is string
-                    && request.resource.data.pinHash.size() == 64;
+      allow create: if docId == 'panel' && request.resource.data.keys().hasOnly(['pinHash', 'creado']);
       allow update, delete: if false;
     }
 
-    // =====================================================================
-    // FASE 2 · Módulo de seguridad (descomentar cuando se agregue Firebase Auth)
-    // =====================================================================
-    //
-    // function esAdmin() {
-    //   return request.auth != null
-    //     && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
-    //     && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
-    // }
-    // function puedeEditar() {
-    //   return request.auth != null
-    //     && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in ['admin', 'mantenimiento'];
-    // }
-    //
-    // match /usuarios/{uid} {
-    //   allow read: if request.auth != null && request.auth.uid == uid;
-    //   allow write: if false;              // los roles se asignan desde la consola
-    // }
-    //
-    // match /galeria/{fotoId} {
-    //   allow read: if true;
-    //   allow create, update, delete: if puedeEditar();
-    // }
-    // match /galeria_full/{fotoId} {
-    //   allow read: if true;
-    //   allow create, delete: if puedeEditar();
-    // }
-    // match /config/{docId} {
-    //   allow read: if true;
-    //   allow create, update, delete: if esAdmin();
-    // }
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
