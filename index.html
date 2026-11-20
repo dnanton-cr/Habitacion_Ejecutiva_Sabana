@@ -128,6 +128,40 @@ input::placeholder,textarea::placeholder{color:#8FA398}
 #formMsg{margin-top:14px;font-size:15px;min-height:24px}
 #formMsg.ok{color:#9BE3B5}
 #formMsg.err{color:#FFB4A8}
+
+/* ---------- Galería dinámica ---------- */
+#galeriaGrid .gal-estado{grid-column:1/-1;font-size:15px;color:var(--muted)}
+.foto{margin:0;position:relative;border-radius:16px;overflow:hidden;background:#DDE7E0;border:1px solid var(--line);cursor:zoom-in;aspect-ratio:4/3}
+.foto img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease}
+.foto:hover img{transform:scale(1.03)}
+.foto figcaption{position:absolute;inset:auto 0 0 0;padding:26px 14px 10px;background:linear-gradient(transparent,rgba(10,22,16,.82));color:#fff;font-size:14px;font-weight:600}
+/* Visor ampliado */
+.lb{position:fixed;inset:0;background:rgba(8,15,11,.94);display:none;align-items:center;justify-content:center;padding:20px;z-index:90}
+.lb.on{display:flex}
+.lb img{max-width:100%;max-height:80vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.lb .cap{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:#fff;font-size:15px;padding:0 24px;margin:0}
+.lb .x{position:absolute;top:14px;right:14px;width:48px;height:48px;border-radius:999px;border:0;background:#fff;color:var(--ink);font-size:24px;line-height:1;cursor:pointer}
+/* Panel de administración */
+.panelbox{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;margin-top:20px}
+.panelbox input[type=password],.panelbox input[type=text]{background:#fff;color:var(--ink);border:1.5px solid #C6D3CB}
+.panelbox input::placeholder{color:#8A9C92}
+.panelbox label{color:var(--ink)}
+.file-drop{border:2px dashed #8FA89A;border-radius:16px;padding:22px;background:var(--paper);text-align:center}
+.file-drop .row{justify-content:center}
+.file-drop p{margin-top:12px}
+.hidden-file{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;overflow:hidden}
+.prog{height:8px;background:var(--line);border-radius:999px;overflow:hidden;margin-top:14px;display:none}
+.prog>i{display:block;height:100%;width:0;background:var(--forest);transition:width .25s}
+.adminmsg{margin-top:12px;font-size:15px;min-height:22px}
+.adminmsg.ok{color:#12633C}
+.adminmsg.err{color:#9B2A1E}
+.fitem{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;display:grid;gap:8px;align-content:start}
+.fitem>img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block}
+.fitem .badge{font-size:12px;font-weight:700;color:var(--forest);letter-spacing:.05em;text-transform:uppercase}
+.fitem .acts{display:flex;gap:6px;flex-wrap:wrap}
+.fitem .acts button{flex:1 1 auto;min-height:40px;padding:6px 10px;border-radius:9px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
+.fitem .acts button.del{color:#9B2A1E;border-color:#E7BDB6}
+
 footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-align:center}
 @media (max-width:640px){h1{font-size:40px}h2{font-size:32px}section{padding:56px 20px}}
 </style>
@@ -162,7 +196,7 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 </div>
 <div style="position:relative">
 <!-- Para usar una foto real: reemplaza el contenido de este div por <img src="img/hero.jpg" alt="Habitación ejecutiva"> -->
-<div class="ph" style="min-height:440px;border-radius:20px"><b>Foto principal de la habitación</b><small>Se mostrará aquí en cuanto la subas</small></div>
+<div class="ph" id="heroMedia" style="min-height:440px;border-radius:20px"><b>Foto principal de la habitación</b><small>Se mostrará aquí en cuanto la subas</small></div>
 <div class="price-tag"><small style="color:var(--muted);font-weight:500">Mes completo, desde</small><br><b>$24.11</b> <span style="font-size:15px;color:var(--muted)">/noche con IVA</span></div>
 </div>
 </div>
@@ -201,8 +235,7 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 <p class="eyebrow">Fotos y video</p>
 <h2>Conoce el lugar antes de llegar</h2>
 <p class="lead">Un recorrido por la habitación, el baño, la entrada independiente y los alrededores.</p>
-<!-- Para cada foto real: reemplaza el contenido del div.ph por <img src="img/archivo.jpg" alt="descripción"> -->
-<div class="grid g300" style="gap:16px;margin-bottom:16px">
+<div class="grid g300" id="galeriaGrid" style="gap:16px;margin-bottom:16px">
 <div class="ph"><b>Entrada independiente</b><small>Foto próximamente</small></div>
 <div class="ph"><b>Escritorio y Smart TV</b><small>Foto próximamente</small></div>
 <div class="ph"><b>Cómoda y cocineta</b><small>Foto próximamente</small></div>
@@ -389,12 +422,60 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 </div>
 </section>
 
+
+<!-- Panel de administración: se muestra al abrir #panel -->
+<section id="panel" style="display:none;padding-top:56px">
+<div class="wrap">
+<p class="eyebrow">Administración</p>
+<h2>Fotos de la galería</h2>
+<p class="lead">Sube, ordena o quita las fotos que se ven en la página. Puedes tomarlas o elegirlas directamente desde tu teléfono.</p>
+
+<div class="panelbox" id="pinBox">
+<h3 style="margin-bottom:8px">Ingresa tu PIN</h3>
+<p style="font-size:15px;color:var(--muted);margin-bottom:16px">Solo quien tenga el PIN puede administrar las fotos. La primera vez, el PIN que escribas queda registrado.</p>
+<form id="pinForm" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+<div style="flex:1 1 200px"><label for="pin">PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="40" autocomplete="current-password" placeholder="••••"></div>
+<button class="btn btn-dark" type="submit" style="min-width:130px">Entrar</button>
+</form>
+<p class="adminmsg" id="pinMsg" role="status" aria-live="polite"></p>
+</div>
+
+<div class="panelbox" id="panelBody" style="display:none">
+<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px">
+<h3 style="margin:0">Subir fotos</h3>
+<button class="btn btn-out" type="button" id="salirBtn" style="min-height:40px;padding:8px 16px;font-size:14px">Cerrar sesión</button>
+</div>
+<div class="file-drop">
+<div class="row" style="gap:12px">
+<label class="btn btn-dark" for="fileInput" style="cursor:pointer;margin:0">Elegir fotos</label>
+<label class="btn btn-out" for="camInput" style="cursor:pointer;margin:0">Tomar foto</label>
+</div>
+<input id="fileInput" type="file" accept="image/*" multiple class="hidden-file">
+<input id="camInput" type="file" accept="image/*" capture="environment" class="hidden-file">
+<p style="font-size:14px;color:var(--muted)">Las fotos se optimizan en tu teléfono antes de subirlas (máx. 1600 px, JPEG). Puedes subir varias a la vez.</p>
+</div>
+<div class="prog" id="prog"><i id="progBar"></i></div>
+<p class="adminmsg" id="upMsg" role="status" aria-live="polite"></p>
+<h3 style="margin:24px 0 12px;font-size:19px">Fotos publicadas</h3>
+<div class="grid" id="listaFotos" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))"></div>
+</div>
+</div>
+</section>
+
+<!-- Visor ampliado -->
+<div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+<button class="x" type="button" id="lbClose" aria-label="Cerrar">×</button>
+<img id="lbImg" alt="">
+<p class="cap" id="lbCap"></p>
+</div>
+
 </main>
 
 <footer>
 <div class="wrap" style="display:grid;gap:6px">
 <div>© 2026 Habitación Ejecutiva Sabana Norte · Sabana Norte, San José, Costa Rica</div>
 <div>Precios en dólares (USD) con IVA 13% incluido. Estadía mínima de 2 noches. Sin parqueo privado.</div>
+<div><a href="#panel" style="color:#9BE3B5;text-decoration:none">Administración de fotos</a></div>
 </div>
 </footer>
 
@@ -437,13 +518,13 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 <!-- Firebase: proyecto habitacionejecutivasabana (Firestore) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import {
+  getFirestore, collection, doc, addDoc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
+  query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-// Pega aquí los valores de Firebase Console > Configuración del proyecto > Tus apps > App web.
-// Estos valores identifican tu proyecto; la seguridad real la dan las reglas de Firestore (firestore.rules).
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Configuración del proyecto web (Firebase Console > Configuración del proyecto > Tus apps).
+// La seguridad real la dan las reglas de Firestore (archivo firestore.rules).
 const firebaseConfig = {
   apiKey: "AIzaSyBQYasOANxFlTL5hERyRs6P5ySgFrmUHqc",
   authDomain: "habitacionejecutivasabana.firebaseapp.com",
@@ -454,28 +535,30 @@ const firebaseConfig = {
   measurementId: "G-MWNBC2Q30P"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-  
-const configured = !Object.values(firebaseConfig).some(function(v){ return String(v).indexOf("PEGAR_") === 0; });
-let db = null;
-if (configured) {
-  db = getFirestore(initializeApp(firebaseConfig));
-}
+const db = getFirestore(app);
 
-const form = document.getElementById("inquiryForm");
-const msg = document.getElementById("formMsg");
-const btn = document.getElementById("submitBtn");
-const arrival = document.getElementById("arrival");
+const COL_FOTOS = "galeria";           // metadatos + miniatura (documentos livianos)
+const COL_COMPLETAS = "galeria_full";  // imagen optimizada completa, se carga al ampliar
+const PIN_DOC_REF = () => doc(db, "config", "panel");
+const PIN_SALT = "sabana-norte-2026";
 
-// La fecha de llegada no puede ser anterior a hoy
-const today = new Date();
-arrival.min = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+const $ = (id) => document.getElementById(id);
 
-function show(text, kind){ msg.textContent = text; msg.className = kind || ""; }
+/* ============================================================
+   1. Formulario de solicitud de reserva
+   ============================================================ */
+const form = $("inquiryForm");
+const msg = $("formMsg");
+const btn = $("submitBtn");
+const arrival = $("arrival");
 
-form.addEventListener("submit", async function(e){
+const hoy = new Date();
+arrival.min = hoy.getFullYear() + "-" + String(hoy.getMonth() + 1).padStart(2, "0") + "-" + String(hoy.getDate()).padStart(2, "0");
+
+function show(text, kind) { if (!msg) return; msg.textContent = text; msg.className = kind || ""; }
+
+form.addEventListener("submit", async function (e) {
   e.preventDefault();
   show("");
   const data = new FormData(form);
@@ -491,7 +574,7 @@ form.addEventListener("submit", async function(e){
   if (!arr) return show("Elige tu fecha de llegada.", "err");
   if (!(nights >= 2 && nights <= 365)) return show("La estadía mínima es de 2 noches.", "err");
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return show("Revisa el correo electrónico.", "err");
-  if (!document.getElementById("rules").checked) return show("Debes aceptar el reglamento para enviar la solicitud.", "err");
+  if (!$("rules").checked) return show("Debes aceptar el reglamento para enviar la solicitud.", "err");
 
   const payload = {
     name: name,
@@ -508,7 +591,6 @@ form.addEventListener("submit", async function(e){
   btn.disabled = true;
   btn.textContent = "Enviando…";
   try {
-    if (!db) throw new Error("firebase-not-configured");
     await addDoc(collection(db, "inquiries"), payload);
     show("¡Solicitud enviada! Te respondemos por WhatsApp para confirmar disponibilidad y tarifa.", "ok");
     form.reset();
@@ -522,6 +604,419 @@ form.addEventListener("submit", async function(e){
     btn.textContent = "Enviar solicitud";
   }
 });
+
+/* ============================================================
+   2. Galería pública: lee las fotos desde Firestore
+   ============================================================ */
+let fotos = [];        // fotos visibles (galería pública)
+let todasFotos = [];   // todas las fotos (panel de administración)
+const ETIQUETAS_VACIAS = ["Entrada independiente", "Escritorio y Smart TV", "Cómoda y cocineta", "Baño privado", "Vista general de la habitación", "Alrededores y Parque La Sabana"];
+
+function pintarGaleria() {
+  const grid = $("galeriaGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+
+  if (!fotos.length) {
+    ETIQUETAS_VACIAS.forEach(function (t) {
+      const d = document.createElement("div");
+      d.className = "ph";
+      d.innerHTML = "<b></b><small>Foto próximamente</small>";
+      d.querySelector("b").textContent = t;
+      grid.appendChild(d);
+    });
+    return;
+  }
+
+  fotos.forEach(function (f) {
+    const fig = document.createElement("figure");
+    fig.className = "foto";
+    const img = document.createElement("img");
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.src = f.thumb;
+    img.alt = f.caption || "Foto de la habitación ejecutiva";
+    fig.appendChild(img);
+    if (f.caption) {
+      const cap = document.createElement("figcaption");
+      cap.textContent = f.caption;
+      fig.appendChild(cap);
+    }
+    fig.addEventListener("click", function () { abrirLightbox(f); });
+    grid.appendChild(fig);
+  });
+}
+
+async function cargarGaleria() {
+  const grid = $("galeriaGrid");
+  if (!grid) return;
+  grid.innerHTML = '<div class="gal-estado">Cargando fotos…</div>';
+  try {
+    const snap = await getDocs(query(collection(db, COL_FOTOS), orderBy("order", "asc")));
+    fotos = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); })
+      .filter(function (f) { return f.vis !== false && f.thumb; });
+  } catch (err) {
+    console.error("No se pudo leer la galería:", err);
+    fotos = [];
+    grid.innerHTML = "";
+    ETIQUETAS_VACIAS.forEach(function (t) {
+      const d = document.createElement("div");
+      d.className = "ph";
+      d.innerHTML = "<b></b><small>Foto próximamente</small>";
+      d.querySelector("b").textContent = t;
+      grid.appendChild(d);
+    });
+    return;
+  }
+  pintarGaleria();
+  if (fotos.length) ponerPortada(fotos[0]);
+}
+
+/* La primera foto de la galería (la de menor "order") se usa como portada del hero */
+async function ponerPortada(f) {
+  const ph = $("heroMedia");
+  if (!ph || !ph.parentNode) return; // la portada ya fue reemplazada
+  let src = f.thumb;
+  try {
+    const snap = await getDoc(doc(db, COL_COMPLETAS, f.id));
+    if (snap.exists() && snap.data().full) src = snap.data().full;
+  } catch (e) { /* si falla, usa la miniatura */ }
+
+  const box = document.createElement("div");
+  box.style.cssText = "min-height:440px;border-radius:20px;overflow:hidden;background:#DDE7E0;position:relative";
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = f.caption || "Habitación ejecutiva en Sabana Norte";
+  img.style.cssText = "width:100%;height:100%;min-height:440px;object-fit:cover;display:block";
+  box.appendChild(img);
+  ph.parentNode.replaceChild(box, ph);
+}
+
+/* ---- Visor ampliado (lightbox) ---- */
+function abrirLightbox(f) {
+  const lb = $("lightbox");
+  const img = $("lbImg");
+  $("lbCap").textContent = f.caption || "";
+  img.removeAttribute("src");
+  img.alt = f.caption || "Foto de la habitación";
+  lb.classList.add("on");
+  document.body.style.overflow = "hidden";
+
+  getDoc(doc(db, COL_COMPLETAS, f.id))
+    .then(function (snap) {
+      if (snap.exists() && snap.data().full) img.src = snap.data().full;
+      else img.src = f.thumb;
+    })
+    .catch(function () { img.src = f.thumb; });
+}
+
+function cerrarLightbox() {
+  $("lightbox").classList.remove("on");
+  $("lbImg").removeAttribute("src");
+  document.body.style.overflow = "";
+}
+$("lightbox").addEventListener("click", function (e) {
+  if (e.target.id !== "lbImg") cerrarLightbox();
+});
+document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrarLightbox(); });
+
+/* ============================================================
+   3. Panel de administración de fotos (PIN + subida desde el teléfono)
+   ============================================================ */
+const SS_KEY = "sabana_panel_ok";
+
+async function hashPin(txt) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt + PIN_SALT));
+  return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+}
+
+function panelMsg(text, kind, id) {
+  const el = $(id || "upMsg");
+  if (!el) return;
+  el.textContent = text;
+  el.className = "adminmsg " + (kind || "");
+}
+
+function mostrarPanel() {
+  $("panel").style.display = "";
+  if (sessionStorage.getItem(SS_KEY) === "1") desbloquearPanel();
+}
+
+function desbloquearPanel() {
+  $("pinBox").style.display = "none";
+  $("panelBody").style.display = "";
+  listarFotosAdmin();
+}
+
+function bloquearPanel() {
+  sessionStorage.removeItem(SS_KEY);
+  $("panelBody").style.display = "none";
+  $("pinBox").style.display = "";
+  $("pin").value = "";
+  panelMsg("", "", "pinMsg");
+}
+
+$("pinForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const pin = $("pin").value.trim();
+  if (pin.length < 4) return panelMsg("El PIN debe tener al menos 4 caracteres.", "err", "pinMsg");
+  panelMsg("Verificando…", "", "pinMsg");
+  try {
+    const ref = PIN_DOC_REF();
+    const snap = await getDoc(ref);
+    const hash = await hashPin(pin);
+    if (!snap.exists()) {
+      await setDoc(ref, { pinHash: hash, creado: serverTimestamp() });
+      panelMsg("PIN creado. Guárdalo bien: con él se administran las fotos.", "ok", "pinMsg");
+    } else if (snap.data().pinHash !== hash) {
+      return panelMsg("PIN incorrecto.", "err", "pinMsg");
+    }
+    sessionStorage.setItem(SS_KEY, "1");
+    setTimeout(desbloquearPanel, snap.exists() ? 0 : 900);
+  } catch (err) {
+    console.error(err);
+    panelMsg("No se pudo verificar el PIN. Revisa la conexión o las reglas de Firestore (código: " + (err.code || err.message) + ").", "err", "pinMsg");
+  }
+});
+
+$("salirBtn") && $("salirBtn").addEventListener("click", bloquearPanel);
+
+/* ---- Compresión en el teléfono antes de subir ---- */
+async function comprimir(file, maxLado, calidad) {
+  let bmp;
+  try {
+    bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch (e) {
+    bmp = await new Promise(function (res, rej) {
+      const i = new Image();
+      i.onload = function () { res(i); };
+      i.onerror = function () { rej(new Error("formato-no-soportado")); };
+      i.src = URL.createObjectURL(file);
+    });
+  }
+  const w0 = bmp.width, h0 = bmp.height;
+  if (!w0 || !h0) throw new Error("imagen-invalida");
+  const escala = Math.min(1, maxLado / Math.max(w0, h0));
+  const w = Math.max(1, Math.round(w0 * escala));
+  const h = Math.max(1, Math.round(h0 * escala));
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bmp, 0, 0, w, h);
+  if (bmp.close) bmp.close();
+  return { dataUrl: canvas.toDataURL("image/jpeg", calidad), w: w, h: h };
+}
+
+async function optimizar(file) {
+  const planes = [[1600, 0.72], [1400, 0.66], [1200, 0.6], [1000, 0.55]];
+  let full = null;
+  for (let i = 0; i < planes.length; i++) {
+    full = await comprimir(file, planes[i][0], planes[i][1]);
+    if (full.dataUrl.length <= 760000) break; // deja margen bajo el límite de 1 MiB por documento
+  }
+  const thumb = await comprimir(file, 520, 0.62);
+  return { full: full, thumb: thumb };
+}
+
+function nuevoId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "f" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+async function subirUna(file, order, idx, total) {
+  panelMsg("Optimizando foto " + idx + " de " + total + "…");
+  const opt = await optimizar(file);
+  const id = nuevoId();
+  panelMsg("Guardando foto " + idx + " de " + total + " en Firebase…");
+  await setDoc(doc(db, COL_COMPLETAS, id), {
+    full: opt.full.dataUrl, w: opt.full.w, h: opt.full.h, bytes: opt.full.dataUrl.length
+  });
+  await setDoc(doc(db, COL_FOTOS, id), {
+    thumb: opt.thumb.dataUrl,
+    caption: "",
+    order: order,
+    vis: true,
+    w: opt.full.w,
+    h: opt.full.h,
+    bytes: opt.full.dataUrl.length,
+    createdAt: serverTimestamp()
+  });
+}
+
+async function procesarArchivos(lista) {
+  const archivos = Array.prototype.slice.call(lista || []).filter(function (f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name); });
+  if (!archivos.length) return panelMsg("Elige al menos una imagen.", "err");
+
+  const prog = $("prog"), bar = $("progBar");
+  prog.style.display = "block";
+  bar.style.width = "0%";
+  $("fileInput").disabled = true;
+  $("camInput").disabled = true;
+
+  let order = todasFotos.reduce(function (m, f) { return Math.max(m, Number(f.order) || 0); }, 0);
+  let ok = 0, fail = 0;
+
+  for (let i = 0; i < archivos.length; i++) {
+    try {
+      order += 1;
+      await subirUna(archivos[i], order, i + 1, archivos.length);
+      ok++;
+    } catch (err) {
+      console.error("Error subiendo " + archivos[i].name, err);
+      fail++;
+    }
+    bar.style.width = Math.round(((i + 1) / archivos.length) * 100) + "%";
+  }
+
+  $("fileInput").disabled = false;
+  $("camInput").disabled = false;
+  $("fileInput").value = "";
+  $("camInput").value = "";
+  setTimeout(function () { $("prog").style.display = "none"; }, 1200);
+
+  if (ok && !fail) panelMsg("¡Listo! " + ok + (ok === 1 ? " foto subida" : " fotos subidas") + ".", "ok");
+  else if (ok && fail) panelMsg(ok + " foto(s) subida(s), " + fail + " con error.", "err");
+  else panelMsg("No se pudo subir ninguna foto. Revisa la conexión y las reglas de Firestore.", "err");
+
+  await cargarGaleria();
+  listarFotosAdmin();
+}
+
+$("fileInput").addEventListener("change", function (e) { procesarArchivos(e.target.files); });
+$("camInput").addEventListener("change", function (e) { procesarArchivos(e.target.files); });
+
+/* ---- Lista de fotos en el panel ---- */
+async function listarFotosAdmin() {
+  const cont = $("listaFotos");
+  if (!cont) return;
+  cont.innerHTML = '<p class="gal-estado">Cargando fotos…</p>';
+  let todas = [];
+  try {
+    const snap = await getDocs(query(collection(db, COL_FOTOS), orderBy("order", "asc")));
+    todas = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+  } catch (err) {
+    cont.innerHTML = "";
+    const p = document.createElement("p");
+    p.className = "adminmsg err";
+    p.textContent = "No se pudieron leer las fotos: " + (err.code || err.message);
+    cont.appendChild(p);
+    return;
+  }
+  todasFotos = todas;
+  cont.innerHTML = "";
+  if (!todas.length) {
+    const p = document.createElement("p");
+    p.className = "gal-estado";
+    p.textContent = "Aún no hay fotos. Sube la primera con el botón de arriba.";
+    cont.appendChild(p);
+    return;
+  }
+
+  todas.forEach(function (f, i) {
+    const card = document.createElement("div");
+    card.className = "fitem";
+
+    const img = document.createElement("img");
+    img.src = f.thumb;
+    img.alt = f.caption || "Foto";
+    card.appendChild(img);
+
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = "#" + (Number(f.order) || i + 1) + (f.vis === false ? " · oculta" : "");
+    card.appendChild(badge);
+
+    const cap = document.createElement("input");
+    cap.type = "text";
+    cap.value = f.caption || "";
+    cap.maxLength = 80;
+    cap.placeholder = "Descripción (ej. Baño privado)";
+    cap.addEventListener("change", async function () {
+      try {
+        await updateDoc(doc(db, COL_FOTOS, f.id), { caption: cap.value.trim() });
+        await cargarGaleria();
+        panelMsg("Descripción guardada.", "ok");
+      } catch (err) { panelMsg("No se pudo guardar la descripción: " + (err.code || err.message), "err"); }
+    });
+    card.appendChild(cap);
+
+    const acts = document.createElement("div");
+    acts.className = "acts";
+
+    const btnSubir = document.createElement("button");
+    btnSubir.type = "button";
+    btnSubir.textContent = "↑";
+    btnSubir.title = "Mover antes";
+    btnSubir.addEventListener("click", function () { mover(f.id, -1); });
+
+    const btnBajar = document.createElement("button");
+    btnBajar.type = "button";
+    btnBajar.textContent = "↓";
+    btnBajar.title = "Mover después";
+    btnBajar.addEventListener("click", function () { mover(f.id, 1); });
+
+    const btnVis = document.createElement("button");
+    btnVis.type = "button";
+    btnVis.textContent = f.vis === false ? "Mostrar" : "Ocultar";
+    btnVis.addEventListener("click", async function () {
+      try {
+        await updateDoc(doc(db, COL_FOTOS, f.id), { vis: f.vis === false });
+        await cargarGaleria();
+        listarFotosAdmin();
+        panelMsg(f.vis === false ? "Foto visible de nuevo." : "Foto oculta.", "ok");
+      } catch (err) { panelMsg("No se pudo cambiar la visibilidad: " + (err.code || err.message), "err"); }
+    });
+
+    const btnDel = document.createElement("button");
+    btnDel.type = "button";
+    btnDel.className = "del";
+    btnDel.textContent = "Borrar";
+    btnDel.addEventListener("click", async function () {
+      if (!confirm("¿Borrar esta foto? No se puede deshacer.")) return;
+      try {
+        await deleteDoc(doc(db, COL_FOTOS, f.id));
+        try { await deleteDoc(doc(db, COL_COMPLETAS, f.id)); } catch (e2) { console.warn(e2); }
+        await cargarGaleria();
+        listarFotosAdmin();
+        panelMsg("Foto borrada.", "ok");
+      } catch (err) { panelMsg("No se pudo borrar: " + (err.code || err.message), "err"); }
+    });
+
+    acts.appendChild(btnSubir);
+    acts.appendChild(btnBajar);
+    acts.appendChild(btnVis);
+    acts.appendChild(btnDel);
+    card.appendChild(acts);
+    cont.appendChild(card);
+  });
+}
+
+async function mover(id, dir) {
+  const lista = todasFotos;
+  const idx = lista.findIndex(function (f) { return f.id === id; });
+  if (idx < 0) return panelMsg("Recarga el panel para reordenar.", "err");
+  const otra = lista[idx + dir];
+  if (!otra) return;
+  const actual = lista[idx];
+  try {
+    await updateDoc(doc(db, COL_FOTOS, actual.id), { order: Number(otra.order) });
+    await updateDoc(doc(db, COL_FOTOS, otra.id), { order: Number(actual.order) });
+    await cargarGaleria();
+    listarFotosAdmin();
+  } catch (err) { panelMsg("No se pudo reordenar: " + (err.code || err.message), "err"); }
+}
+
+/* ---- Abrir el panel con #panel ---- */
+function mostrarPanelSiCorresponde() {
+  if (location.hash === "#panel") mostrarPanel();
+}
+window.addEventListener("hashchange", mostrarPanelSiCorresponde);
+mostrarPanelSiCorresponde();
+
+/* ---- Arranque ---- */
+cargarGaleria();
 </script>
 </body>
 </html>
