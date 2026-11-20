@@ -1,4 +1,4 @@
-<!doctype html>
+a<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -162,6 +162,17 @@ input::placeholder,textarea::placeholder{color:#8FA398}
 .fitem .acts button{flex:1 1 auto;min-height:40px;padding:6px 10px;border-radius:9px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
 .fitem .acts button.del{color:#9B2A1E;border-color:#E7BDB6}
 
+/* ---------- Videos ---------- */
+.foto.vid{cursor:pointer}
+.foto.vid::after{content:"";position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:999px;background:rgba(255,255,255,.92) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2314231C' d='M8 5l11 7-11 7z'/%3E%3C/svg%3E") center/30px no-repeat;box-shadow:0 6px 20px rgba(0,0,0,.35);pointer-events:none}
+.lb video{display:none;max-width:100%;max-height:80vh;border-radius:14px;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.lb iframe{display:none;width:min(920px,100%);aspect-ratio:16/9;border:0;border-radius:14px;background:#000}
+.lb.mv img,.lb.my img{display:none}
+.lb.mv video{display:block}
+.lb.my iframe{display:block}
+.panelbox input[type=url]{background:#fff;color:var(--ink);border:1.5px solid #C6D3CB}
+.file-drop+.file-drop{margin-top:14px}
+
 footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-align:center}
 @media (max-width:640px){h1{font-size:40px}h2{font-size:32px}section{padding:56px 20px}}
 </style>
@@ -243,8 +254,8 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 <div class="ph"><b>Vista general de la habitación</b><small>Foto próximamente</small></div>
 <div class="ph"><b>Alrededores y Parque La Sabana</b><small>Foto próximamente</small></div>
 </div>
-<!-- Para el video: reemplaza este bloque por <video controls poster="img/poster.jpg" src="video/recorrido.mp4" style="width:100%;border-radius:16px"></video> o un iframe de YouTube -->
-<div style="min-height:340px;border-radius:16px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px">
+<!-- Este bloque se oculta solo cuando subes videos desde el panel (#panel) -->
+<div id="videoVacio" style="min-height:340px;border-radius:16px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px">
 <div style="width:68px;height:68px;border-radius:999px;background:var(--paper);color:var(--ink);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg></div>
 <b style="font-family:var(--head);font-size:24px">Recorrido en video</b>
 <span style="font-size:15px;color:#B9C7BE;max-width:420px">El video de la habitación se mostrará aquí. Mientras tanto, pídelo por WhatsApp y te lo enviamos.</span>
@@ -427,8 +438,8 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 <section id="panel" style="display:none;padding-top:56px">
 <div class="wrap">
 <p class="eyebrow">Administración</p>
-<h2>Fotos de la galería</h2>
-<p class="lead">Sube, ordena o quita las fotos que se ven en la página. Puedes tomarlas o elegirlas directamente desde tu teléfono.</p>
+<h2>Fotos y videos de la galería</h2>
+<p class="lead">Sube, ordena o quita las fotos y videos que se ven en la página. Puedes grabarlos o elegirlos directamente desde tu teléfono.</p>
 
 <div class="panelbox" id="pinBox">
 <h3 style="margin-bottom:8px">Ingresa tu PIN</h3>
@@ -454,18 +465,37 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 <input id="camInput" type="file" accept="image/*" capture="environment" class="hidden-file">
 <p style="font-size:14px;color:var(--muted)">Las fotos se optimizan en tu teléfono antes de subirlas (máx. 1600 px, JPEG). Puedes subir varias a la vez.</p>
 </div>
+<h3 style="margin:26px 0 12px;font-size:19px">Subir videos</h3>
+<div class="file-drop">
+<div class="row" style="gap:12px">
+<label class="btn btn-dark" for="videoInput" style="cursor:pointer;margin:0">Elegir videos</label>
+<label class="btn btn-out" for="vidCamInput" style="cursor:pointer;margin:0">Grabar video</label>
+</div>
+<input id="videoInput" type="file" accept="video/*" multiple class="hidden-file">
+<input id="vidCamInput" type="file" accept="video/*" capture="environment" class="hidden-file">
+<p style="font-size:14px;color:var(--muted)">Cada video se comprime en tu teléfono (480p, sin audio) y se guarda en la base de datos. Máximo 60 segundos por video. Mantén esta pantalla abierta mientras se comprime (tarda lo mismo que dura el video).</p>
+</div>
+<div class="file-drop">
+<p style="margin:0 0 12px;font-size:15px;font-weight:600">¿Video más largo? Súbelo a YouTube (como "no listado") y pega el enlace</p>
+<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;text-align:left">
+<div style="flex:1 1 240px"><label for="ytUrl">Enlace de YouTube</label><input id="ytUrl" type="url" placeholder="https://youtu.be/…" autocomplete="off"></div>
+<button class="btn btn-dark" type="button" id="ytBtn" style="min-width:130px">Agregar</button>
+</div>
+</div>
 <div class="prog" id="prog"><i id="progBar"></i></div>
 <p class="adminmsg" id="upMsg" role="status" aria-live="polite"></p>
-<h3 style="margin:24px 0 12px;font-size:19px">Fotos publicadas</h3>
+<h3 style="margin:24px 0 12px;font-size:19px">Fotos y videos publicados</h3>
 <div class="grid" id="listaFotos" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))"></div>
 </div>
 </div>
 </section>
 
 <!-- Visor ampliado -->
-<div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+<div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto o video ampliado">
 <button class="x" type="button" id="lbClose" aria-label="Cerrar">×</button>
 <img id="lbImg" alt="">
+<video id="lbVideo" controls playsinline muted></video>
+<iframe id="lbFrame" title="Video de YouTube" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
 <p class="cap" id="lbCap"></p>
 </div>
 
@@ -475,7 +505,7 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 <div class="wrap" style="display:grid;gap:6px">
 <div>© 2026 Habitación Ejecutiva Sabana Norte · Sabana Norte, San José, Costa Rica</div>
 <div>Precios en dólares (USD) con IVA 13% incluido. Estadía mínima de 2 noches. Sin parqueo privado.</div>
-<div><a href="#panel" style="color:#9BE3B5;text-decoration:none">Administración de fotos</a></div>
+<div><a href="#panel" style="color:#9BE3B5;text-decoration:none">Administración de fotos y videos</a></div>
 </div>
 </footer>
 
@@ -520,7 +550,7 @@ footer{padding:28px 24px;background:#0E1A14;color:#B9C7BE;font-size:14px;text-al
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import {
   getFirestore, collection, doc, addDoc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp
+  query, orderBy, serverTimestamp, writeBatch, Bytes
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // Configuración del proyecto web (Firebase Console > Configuración del proyecto > Tus apps).
@@ -540,6 +570,7 @@ const db = getFirestore(app);
 
 const COL_FOTOS = "galeria";           // metadatos + miniatura (documentos livianos)
 const COL_COMPLETAS = "galeria_full";  // imagen optimizada completa, se carga al ampliar
+const COL_VIDEO = "galeria_video";     // trozos binarios de cada video (id_000, id_001, …), se cargan al reproducir
 const PIN_DOC_REF = () => doc(db, "config", "panel");
 const PIN_SALT = "sabana-norte-2026";
 
@@ -617,6 +648,10 @@ function pintarGaleria() {
   if (!grid) return;
   grid.innerHTML = "";
 
+  // El bloque "Recorrido en video" (pídelo por WhatsApp) solo se muestra si no hay videos publicados
+  const vacio = $("videoVacio");
+  if (vacio) vacio.style.display = fotos.some(esVideo) ? "none" : "";
+
   if (!fotos.length) {
     ETIQUETAS_VACIAS.forEach(function (t) {
       const d = document.createElement("div");
@@ -630,12 +665,12 @@ function pintarGaleria() {
 
   fotos.forEach(function (f) {
     const fig = document.createElement("figure");
-    fig.className = "foto";
+    fig.className = "foto" + (esVideo(f) ? " vid" : "");
     const img = document.createElement("img");
     img.loading = "lazy";
     img.decoding = "async";
     img.src = f.thumb;
-    img.alt = f.caption || "Foto de la habitación ejecutiva";
+    img.alt = f.caption || (esVideo(f) ? "Video de la habitación ejecutiva" : "Foto de la habitación ejecutiva");
     fig.appendChild(img);
     if (f.caption) {
       const cap = document.createElement("figcaption");
@@ -669,7 +704,9 @@ async function cargarGaleria() {
     return;
   }
   pintarGaleria();
-  if (fotos.length) ponerPortada(fotos[0]);
+  // La portada es la primera FOTO (los videos no se usan como portada)
+  const portada = fotos.find(function (x) { return !esVideo(x); });
+  if (portada) ponerPortada(portada);
 }
 
 /* La primera foto de la galería (la de menor "order") se usa como portada del hero */
@@ -693,30 +730,78 @@ async function ponerPortada(f) {
 }
 
 /* ---- Visor ampliado (lightbox) ---- */
+let lbToken = 0; // evita que una carga lenta de otro elemento pise el que se está viendo
+
+function modoLb(m) {
+  const lb = $("lightbox");
+  lb.classList.remove("mv", "my");
+  if (m === "v") lb.classList.add("mv");
+  if (m === "y") lb.classList.add("my");
+}
+
 function abrirLightbox(f) {
   const lb = $("lightbox");
   const img = $("lbImg");
-  $("lbCap").textContent = f.caption || "";
+  const vid = $("lbVideo");
+  const fr = $("lbFrame");
+  const cap = $("lbCap");
+  const tok = ++lbToken;
+  cap.textContent = f.caption || "";
   img.removeAttribute("src");
-  img.alt = f.caption || "Foto de la habitación";
+  vid.removeAttribute("src");
+  fr.removeAttribute("src");
   lb.classList.add("on");
   document.body.style.overflow = "hidden";
 
+  if (f.type === "youtube") {
+    modoLb("y");
+    fr.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(f.ytid) + "?autoplay=1&rel=0";
+    return;
+  }
+
+  if (f.type === "video") {
+    modoLb("v");
+    cap.textContent = "Cargando video…";
+    obtenerVideoUrl(f, function (p) {
+      if (tok === lbToken) cap.textContent = "Cargando video… " + Math.round(p * 100) + "%";
+    }).then(function (url) {
+      if (tok !== lbToken) return;
+      cap.textContent = f.caption || "";
+      vid.src = url;
+      const pr = vid.play();
+      if (pr && pr.catch) pr.catch(function () { /* el visitante pulsa ▶ */ });
+    }).catch(function (err) {
+      console.error(err);
+      if (tok === lbToken) cap.textContent = "No se pudo cargar el video. Intenta de nuevo.";
+    });
+    return;
+  }
+
+  modoLb("i");
+  img.alt = f.caption || "Foto de la habitación";
   getDoc(doc(db, COL_COMPLETAS, f.id))
     .then(function (snap) {
+      if (tok !== lbToken) return;
       if (snap.exists() && snap.data().full) img.src = snap.data().full;
       else img.src = f.thumb;
     })
-    .catch(function () { img.src = f.thumb; });
+    .catch(function () { if (tok === lbToken) img.src = f.thumb; });
 }
 
 function cerrarLightbox() {
+  lbToken++;
   $("lightbox").classList.remove("on");
   $("lbImg").removeAttribute("src");
+  const vid = $("lbVideo");
+  vid.pause();
+  vid.removeAttribute("src");
+  vid.load();
+  $("lbFrame").removeAttribute("src");
+  modoLb("i");
   document.body.style.overflow = "";
 }
 $("lightbox").addEventListener("click", function (e) {
-  if (e.target.id !== "lbImg") cerrarLightbox();
+  if (e.target.id !== "lbImg" && e.target.id !== "lbVideo" && e.target.id !== "lbFrame") cerrarLightbox();
 });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrarLightbox(); });
 
@@ -852,8 +937,7 @@ async function procesarArchivos(lista) {
   const prog = $("prog"), bar = $("progBar");
   prog.style.display = "block";
   bar.style.width = "0%";
-  $("fileInput").disabled = true;
-  $("camInput").disabled = true;
+  bloquearEntradas(true);
 
   let order = todasFotos.reduce(function (m, f) { return Math.max(m, Number(f.order) || 0); }, 0);
   let ok = 0, fail = 0;
@@ -870,10 +954,8 @@ async function procesarArchivos(lista) {
     bar.style.width = Math.round(((i + 1) / archivos.length) * 100) + "%";
   }
 
-  $("fileInput").disabled = false;
-  $("camInput").disabled = false;
-  $("fileInput").value = "";
-  $("camInput").value = "";
+  bloquearEntradas(false);
+  limpiarEntradas();
   setTimeout(function () { $("prog").style.display = "none"; }, 1200);
 
   if (ok && !fail) panelMsg("¡Listo! " + ok + (ok === 1 ? " foto subida" : " fotos subidas") + ".", "ok");
@@ -886,6 +968,275 @@ async function procesarArchivos(lista) {
 
 $("fileInput").addEventListener("change", function (e) { procesarArchivos(e.target.files); });
 $("camInput").addEventListener("change", function (e) { procesarArchivos(e.target.files); });
+
+/* ============================================================
+   Videos: se comprimen en el teléfono y se guardan en Firestore por trozos
+   - galeria/{id}          → tipo "video": miniatura (poster), duración, nº de trozos
+   - galeria_video/{id}_NNN → cada trozo (~900 KB binarios; el límite de Firestore es 1 MiB por documento)
+   Al reproducir se descargan los trozos, se unen y se muestran con <video>.
+   ============================================================ */
+const MAX_VIDEO_BYTES = 10 * 1024 * 1024;  // tamaño máximo del video ya comprimido
+const MAX_VIDEO_SEG = 60;                  // duración máxima por video
+const TROZO_BYTES = 900000;
+const cacheVideos = {};
+
+function esVideo(f) { return !!f && (f.type === "video" || f.type === "youtube"); }
+function pad3(n) { return String(n).padStart(3, "0"); }
+function mb(bytes) { return (bytes / 1048576).toFixed(1) + " MB"; }
+
+function ytId(u) {
+  try {
+    const x = new URL(String(u).trim());
+    let id = "";
+    if (x.hostname === "youtu.be") id = x.pathname.slice(1);
+    else if (/(^|\.)youtube\.com$/.test(x.hostname)) {
+      if (x.pathname === "/watch") id = x.searchParams.get("v") || "";
+      else { const m = x.pathname.match(/^\/(embed|shorts|live)\/([\w-]+)/); if (m) id = m[2]; }
+    }
+    return /^[\w-]{6,20}$/.test(id) ? id : "";
+  } catch (e) { return ""; }
+}
+
+const ENTRADAS = ["fileInput", "camInput", "videoInput", "vidCamInput", "ytUrl", "ytBtn"];
+function bloquearEntradas(b) { ENTRADAS.forEach(function (id) { const el = $(id); if (el) el.disabled = b; }); }
+function limpiarEntradas() { ["fileInput", "camInput", "videoInput", "vidCamInput"].forEach(function (id) { const el = $(id); if (el) el.value = ""; }); }
+
+function cargarVideoEl(file) {
+  return new Promise(function (res, rej) {
+    const v = document.createElement("video");
+    v.muted = true; v.defaultMuted = true; v.playsInline = true; v.preload = "auto";
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+    v.onloadeddata = function () { res(v); };
+    v.onerror = function () { rej(new Error("video-no-soportado")); };
+    v.src = URL.createObjectURL(file);
+  });
+}
+function esperar(el, ev) { return new Promise(function (res) { el.addEventListener(ev, res, { once: true }); }); }
+
+function fotogramaJpeg(v, maxLado, calidad) {
+  const esc = Math.min(1, maxLado / Math.max(v.videoWidth, v.videoHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(v.videoWidth * esc));
+  c.height = Math.max(1, Math.round(v.videoHeight * esc));
+  c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", calidad);
+}
+
+function elegirMime() {
+  if (!window.MediaRecorder) return "";
+  const c = ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+  for (let i = 0; i < c.length; i++) { if (MediaRecorder.isTypeSupported(c[i])) return c[i]; }
+  return "";
+}
+
+/* Devuelve { blob, mime, poster, w, h, dur } con el video ya comprimido */
+async function prepararVideo(file, onProg) {
+  const v = await cargarVideoEl(file);
+  const dur = v.duration;
+  if (!isFinite(dur) || dur <= 0 || !v.videoWidth) throw new Error("video-invalido");
+  if (dur > MAX_VIDEO_SEG + 0.5) throw new Error("video-largo");
+
+  v.currentTime = Math.min(0.5, dur / 4);
+  await esperar(v, "seeked");
+  const poster = fotogramaJpeg(v, 520, 0.62);
+
+  const mime = elegirMime();
+  const puedeGrabar = mime && HTMLCanvasElement.prototype.captureStream;
+  if (!puedeGrabar) {
+    // Navegador sin compresión: solo se acepta si el archivo original ya es pequeño
+    URL.revokeObjectURL(v.src);
+    if (file.size > MAX_VIDEO_BYTES) throw new Error("sin-compresion");
+    return { blob: file, mime: (file.type || "video/mp4").split(";")[0], poster: poster, w: v.videoWidth, h: v.videoHeight, dur: dur };
+  }
+
+  const esc = Math.min(1, 854 / Math.max(v.videoWidth, v.videoHeight));
+  const w = Math.max(2, Math.round(v.videoWidth * esc / 2) * 2);
+  const h = Math.max(2, Math.round(v.videoHeight * esc / 2) * 2);
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  const bps = Math.max(250000, Math.min(1500000, Math.floor(MAX_VIDEO_BYTES * 8 * 0.7 / dur)));
+  const stream = canvas.captureStream(24);
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bps });
+  const partes = [];
+  rec.ondataavailable = function (e) { if (e.data && e.data.size) partes.push(e.data); };
+  const parado = new Promise(function (res) { rec.onstop = res; });
+
+  if (v.currentTime !== 0) { v.currentTime = 0; await esperar(v, "seeked"); }
+
+  let activo = true;
+  function pintar() {
+    if (!activo) return;
+    ctx.drawImage(v, 0, 0, w, h);
+    onProg(Math.min(1, v.currentTime / dur));
+    sigue();
+  }
+  function sigue() {
+    if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(pintar);
+    else requestAnimationFrame(pintar);
+  }
+  const fin = new Promise(function (res) { v.onended = res; v.onerror = res; });
+  let timer;
+  const limite = new Promise(function (res) { timer = setTimeout(res, (dur * 2 + 15) * 1000); });
+
+  rec.start(500);
+  ctx.drawImage(v, 0, 0, w, h);
+  await v.play();
+  sigue();
+  await Promise.race([fin, limite]);
+  clearTimeout(timer);
+  activo = false;
+  const completo = v.ended;
+  ctx.drawImage(v, 0, 0, w, h);
+  await new Promise(function (r) { setTimeout(r, 300); }); // deja salir el último cuadro
+  if (rec.state !== "inactive") rec.stop();
+  await parado;
+  stream.getTracks().forEach(function (t) { t.stop(); });
+  URL.revokeObjectURL(v.src);
+
+  if (!completo) throw new Error("interrumpido");
+  const blob = new Blob(partes, { type: mime.split(";")[0] });
+  if (blob.size > MAX_VIDEO_BYTES) throw new Error("muy-grande");
+  return { blob: blob, mime: mime.split(";")[0], poster: poster, w: w, h: h, dur: dur };
+}
+
+async function subirVideo(file, order, idx, total) {
+  const barra = $("progBar");
+  panelMsg("Comprimiendo video " + idx + " de " + total + "… mantén esta pantalla abierta.");
+  barra.style.width = "0%";
+  const r = await prepararVideo(file, function (p) { barra.style.width = Math.round(p * 100) + "%"; });
+
+  const id = nuevoId();
+  const buf = new Uint8Array(await r.blob.arrayBuffer());
+  const n = Math.ceil(buf.length / TROZO_BYTES);
+  const escritos = [];
+  try {
+    for (let i = 0; i < n; i++) {
+      panelMsg("Guardando video " + idx + " de " + total + " en Firebase (" + (i + 1) + " de " + n + ")…");
+      barra.style.width = Math.round((i / n) * 100) + "%";
+      const rid = id + "_" + pad3(i);
+      await setDoc(doc(db, COL_VIDEO, rid), {
+        v: id, i: i, b: Bytes.fromUint8Array(buf.subarray(i * TROZO_BYTES, (i + 1) * TROZO_BYTES))
+      });
+      escritos.push(rid);
+    }
+    // El documento de la galería se crea al final: si algo falla antes, no queda un video roto publicado
+    await setDoc(doc(db, COL_FOTOS, id), {
+      type: "video", thumb: r.poster, caption: "", order: order, vis: true,
+      w: r.w, h: r.h, dur: Math.round(r.dur), bytes: buf.length, chunks: n, mime: r.mime,
+      createdAt: serverTimestamp()
+    });
+  } catch (err) {
+    await Promise.all(escritos.map(function (rid) { return deleteDoc(doc(db, COL_VIDEO, rid)).catch(function () {}); }));
+    throw err;
+  }
+}
+
+function textoErrorVideo(err, nombre) {
+  const m = err && err.message;
+  if (m === "video-largo") return "«" + nombre + "» dura más de " + MAX_VIDEO_SEG + " segundos. Recórtalo, o súbelo a YouTube y pega el enlace.";
+  if (m === "video-no-soportado" || m === "video-invalido") return "«" + nombre + "»: este navegador no puede leer ese formato de video.";
+  if (m === "sin-compresion") return "«" + nombre + "»: tu navegador no puede comprimir videos y el archivo pesa más de " + mb(MAX_VIDEO_BYTES) + ". Usa Chrome o Safari actualizado, o pega un enlace de YouTube.";
+  if (m === "muy-grande") return "«" + nombre + "» sigue pesando más de " + mb(MAX_VIDEO_BYTES) + " tras comprimirlo. Usa un video más corto, o YouTube.";
+  if (m === "interrumpido") return "«" + nombre + "»: la compresión se interrumpió (¿saliste de la pantalla?). Inténtalo de nuevo sin cambiar de aplicación.";
+  return "«" + nombre + "»: " + ((err && (err.code || err.message)) || "error desconocido");
+}
+
+async function procesarVideos(lista) {
+  const archivos = Array.prototype.slice.call(lista || []).filter(function (f) { return /^video\//.test(f.type) || /\.(mp4|m4v|mov|webm|3gp)$/i.test(f.name); });
+  if (!archivos.length) return panelMsg("Elige al menos un video.", "err");
+
+  const prog = $("prog");
+  prog.style.display = "block";
+  bloquearEntradas(true);
+
+  let order = todasFotos.reduce(function (m, f) { return Math.max(m, Number(f.order) || 0); }, 0);
+  let ok = 0;
+  const errores = [];
+  for (let i = 0; i < archivos.length; i++) {
+    try {
+      order += 1;
+      await subirVideo(archivos[i], order, i + 1, archivos.length);
+      ok++;
+    } catch (err) {
+      console.error("Error subiendo " + archivos[i].name, err);
+      errores.push(textoErrorVideo(err, archivos[i].name));
+    }
+  }
+
+  bloquearEntradas(false);
+  limpiarEntradas();
+  $("progBar").style.width = "100%";
+  setTimeout(function () { prog.style.display = "none"; }, 1200);
+
+  if (ok && !errores.length) panelMsg("¡Listo! " + ok + (ok === 1 ? " video subido" : " videos subidos") + ".", "ok");
+  else if (ok) panelMsg(ok + " video(s) subido(s). " + errores.join(" "), "err");
+  else panelMsg(errores.join(" "), "err");
+
+  await cargarGaleria();
+  listarFotosAdmin();
+}
+
+$("videoInput").addEventListener("change", function (e) { procesarVideos(e.target.files); });
+$("vidCamInput").addEventListener("change", function (e) { procesarVideos(e.target.files); });
+
+$("ytBtn").addEventListener("click", async function () {
+  const id = ytId($("ytUrl").value);
+  if (!id) return panelMsg("No reconocí ese enlace. Pega el enlace completo del video de YouTube.", "err");
+  bloquearEntradas(true);
+  try {
+    const order = todasFotos.reduce(function (m, f) { return Math.max(m, Number(f.order) || 0); }, 0) + 1;
+    await setDoc(doc(db, COL_FOTOS, nuevoId()), {
+      type: "youtube", ytid: id, thumb: "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg",
+      caption: "", order: order, vis: true, createdAt: serverTimestamp()
+    });
+    $("ytUrl").value = "";
+    panelMsg("Enlace de YouTube agregado.", "ok");
+    await cargarGaleria();
+    listarFotosAdmin();
+  } catch (err) {
+    console.error(err);
+    panelMsg("No se pudo agregar el enlace: " + (err.code || err.message), "err");
+  } finally {
+    bloquearEntradas(false);
+  }
+});
+
+/* Descarga los trozos de un video, los une y devuelve una URL reproducible (se guarda en caché) */
+async function obtenerVideoUrl(f, onProg) {
+  if (cacheVideos[f.id]) return cacheVideos[f.id];
+  const n = f.chunks || 0;
+  if (!n) throw new Error("video-sin-trozos");
+  const partes = new Array(n);
+  let hechos = 0;
+  await Promise.all(Array.from({ length: n }, function (_, i) {
+    return getDoc(doc(db, COL_VIDEO, f.id + "_" + pad3(i))).then(function (s) {
+      if (!s.exists()) throw new Error("falta-trozo-" + i);
+      partes[i] = s.data().b.toUint8Array();
+      hechos++;
+      onProg(hechos / n);
+    });
+  }));
+  const url = URL.createObjectURL(new Blob(partes, { type: f.mime || "video/mp4" }));
+  cacheVideos[f.id] = url;
+  return url;
+}
+
+/* Borra un elemento de la galería (foto, video o enlace de YouTube) con todos sus datos */
+async function borrarElemento(f) {
+  if (f.type === "video") {
+    const b = writeBatch(db);
+    for (let i = 0; i < (f.chunks || 0); i++) b.delete(doc(db, COL_VIDEO, f.id + "_" + pad3(i)));
+    await b.commit();
+    if (cacheVideos[f.id]) { URL.revokeObjectURL(cacheVideos[f.id]); delete cacheVideos[f.id]; }
+    await deleteDoc(doc(db, COL_FOTOS, f.id));
+    return;
+  }
+  await deleteDoc(doc(db, COL_FOTOS, f.id));
+  if (f.type !== "youtube") {
+    try { await deleteDoc(doc(db, COL_COMPLETAS, f.id)); } catch (e2) { console.warn(e2); }
+  }
+}
 
 /* ---- Lista de fotos en el panel ---- */
 async function listarFotosAdmin() {
@@ -925,7 +1276,9 @@ async function listarFotosAdmin() {
 
     const badge = document.createElement("span");
     badge.className = "badge";
-    badge.textContent = "#" + (Number(f.order) || i + 1) + (f.vis === false ? " · oculta" : "");
+    const tipo = f.type === "video" ? " · ▶ video " + (f.dur || 0) + " s, " + mb(f.bytes || 0)
+      : f.type === "youtube" ? " · ▶ YouTube" : "";
+    badge.textContent = "#" + (Number(f.order) || i + 1) + tipo + (f.vis === false ? " · oculta" : "");
     card.appendChild(badge);
 
     const cap = document.createElement("input");
@@ -974,13 +1327,12 @@ async function listarFotosAdmin() {
     btnDel.className = "del";
     btnDel.textContent = "Borrar";
     btnDel.addEventListener("click", async function () {
-      if (!confirm("¿Borrar esta foto? No se puede deshacer.")) return;
+      if (!confirm(esVideo(f) ? "¿Borrar este video? No se puede deshacer." : "¿Borrar esta foto? No se puede deshacer.")) return;
       try {
-        await deleteDoc(doc(db, COL_FOTOS, f.id));
-        try { await deleteDoc(doc(db, COL_COMPLETAS, f.id)); } catch (e2) { console.warn(e2); }
+        await borrarElemento(f);
         await cargarGaleria();
         listarFotosAdmin();
-        panelMsg("Foto borrada.", "ok");
+        panelMsg(esVideo(f) ? "Video borrado." : "Foto borrada.", "ok");
       } catch (err) { panelMsg("No se pudo borrar: " + (err.code || err.message), "err"); }
     });
 
