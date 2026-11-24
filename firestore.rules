@@ -27,7 +27,7 @@ service cloud.firestore {
         && request.resource.data.arrival is string && request.resource.data.arrival.size() == 10
         && request.resource.data.nights is int
         && request.resource.data.nights >= 2 && request.resource.data.nights <= 365
-        && request.resource.data.language in ['es', 'en', 'de', 'pt']
+        && request.resource.data.language in ['es', 'en', 'pt', 'de', 'it']
         && request.resource.data.message is string && request.resource.data.message.size() <= 600
         && request.resource.data.source == 'web'
         && request.resource.data.createdAt == request.time;
